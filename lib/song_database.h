@@ -1,9 +1,12 @@
-#ifndef SONG_DATABASE
-#define SONG_DATABASE_H
+#pragma once
 
+#include <iostream>
 #include <cstdio>
+#include <taglib/fileref.h> 
+#include <taglib/tag.h>     
+#include <taglib/tstring.h> 
 
-#include "../third-party/sqlite/sqlite3.h"
+#include "sqlite3.h"
 
 class song_library
 {
@@ -11,13 +14,11 @@ class song_library
         sqlite3* connection;
 
     public:
-        void init_database(const char);
+        void init_database(const char*);
         void create_playlist();
         void delete_playlist();
-        void add_song(const char, const char);
+        void add_song(const char*, const char*);
         void remove_song();
-        char* get_song_address();
+        std::string get_song_address(const char*, int);
         
 };
-
-#endif

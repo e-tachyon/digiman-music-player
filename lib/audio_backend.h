@@ -1,18 +1,6 @@
-#ifndef AUDIO_BACKEND
-#define AUDIO_BACKEND_H
+#pragma once
 
-#define MINIAUDIO_IMPLEMENTATION
-#include "../third-party/miniaudio/miniaudio.h"
-
-void data_callback(ma_device *p_device, void *p_output, const void *p_input, ma_uint32 frame_count)
-    {
-        ma_decoder *p_decoder = (ma_decoder*)p_device->pUserData;
-        if(p_decoder == NULL)
-        {
-            return;
-        }
-        ma_decoder_read_pcm_frames(p_decoder, p_output, frame_count, NULL);
-    }
+#include "miniaudio.h"
 
 class audio_playback
 {
@@ -23,11 +11,12 @@ class audio_playback
         ma_device device;
         
     public:
-        void song_init(const char);
+        ~audio_playback();
+        audio_playback(const char*);
         void set_volume(int);
         void play_audio();
         void pause_audio();
 
 };
 
-#endif
+void data_callback(ma_device*, void*, const void*, ma_uint32);
