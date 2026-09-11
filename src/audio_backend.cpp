@@ -1,41 +1,59 @@
 #define MINIAUDIO_IMPLEMENTATION
 #include "audio_backend.h"
 
-void data_callback(ma_device *p_device, void *p_output, const void *p_input, ma_uint32 frame_count)
-    {
-        ma_decoder *p_decoder = (ma_decoder*)p_device->pUserData;
-        if(p_decoder == NULL)
-        {
-            return;
-        }
-        ma_decoder_read_pcm_frames(p_decoder, p_output, frame_count, NULL);
-    }
+void data_callback(ma_device* pDevice, void* pOutput, const void* pInput, ma_uint32 frameCount)
+{
+    ma_data_source_read_pcm_frames((ma_data_source*)pDevice->pUserData, pOutput, frameCount, NULL);
+
+    (void)pInput;
+}
 
 audio_playback::~audio_playback()
 {
     ma_device_uninit(&device);
-    ma_decoder_uninit(&decoder);
+    ma_resource_manager_uninit(&resource_manager);
+
+    return;
 }
 
 //decode and device init function
-audio_playback::audio_playback(const char* song)
+audio_playback::audio_playback(const char* song_1, const char* song_2)
 {
-    //inits decoder
-    result = ma_decoder_init_file(song, NULL, &decoder);
-
-    //sets device with decoder values for playback
     device_config = ma_device_config_init(ma_device_type_playback);
-    device_config.playback.format = decoder.outputFormat;
-    device_config.playback.channels = decoder.outputChannels;
-    device_config.sampleRate = decoder.outputSampleRate;
+    device_config.playback.format   = ma_format_f32;
+    device_config.playback.channels = 2;
+    device_config.sampleRate        = 44100;
     device_config.dataCallback = data_callback;
-    device_config.pUserData = &decoder;
+    device_config.pUserData = &song_source;
+    result = ma_device_init(NULL, &device_config, &device);
 
-    //inits device and plays audio
-    ma_device_init(NULL, &device_config, &device);
-    ma_device_start(&device);
+    ma_device_set_master_volume(&device, 0.1);
+
+    resource_manager_config = ma_resource_manager_config_init();
+    resource_manager_config.decodedFormat   = device.playback.format;
+    resource_manager_config.decodedChannels = device.playback.channels;
+    resource_manager_config.decodedSampleRate = device.sampleRate;
+    result = ma_resource_manager_init(&resource_manager_config, &resource_manager);
+    result = ma_resource_manager_data_source_init(&resource_manager, song_1, NULL, NULL, &song_source);
+    result = result = ma_resource_manager_data_source_init(&resource_manager, song_2, NULL, NULL, &song_source_next);
+
+    ma_data_source_set_next(&song_source, &song_source_next);
+    return;
 }
 
+void audio_playback::buffer_manager()
+{
+    
+}
+
+void audio_playback::skip_song()
+{
+    ma_device_stop(&device);
+    ma_data_source_set_current(&song_source, &song_source_next);
+    ma_device_start(&device);
+
+    return;
+}
 
 //set playback volume
 void audio_playback::set_volume(int level)
@@ -58,13 +76,15 @@ void audio_playback::set_volume(int level)
 //start playback
 void audio_playback::play_audio()
 {
-    ma_device_start(&device);
+    ma_device_start(&device);   
+    return;
 }
 
 //stop playback
 void audio_playback::pause_audio()
 {
     ma_device_stop(&device);
+    return;
 }
 
 

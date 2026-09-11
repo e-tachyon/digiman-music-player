@@ -2,12 +2,14 @@
 #include <cstdio>
 #include "audio_backend.h"
 #include "song_database.h"
+#include "song_queue.h"
 
 int main()
 {   
     //test variables
     char user_input;
     char exit_song;
+    int song_number;
 
     //database
     const char* song_db = "../song_db.db";
@@ -15,21 +17,29 @@ int main()
     //test song
     std::string test_song;
 
-    printf("Enter song location: ");
-    std::cin >> test_song;
-
-    //decoder init for song
+    //library init
     song_library library;
-
     library.init_database(song_db);
-    library.add_song(song_db, test_song.c_str());
+
+    song_queue track_queue(&library);
 
     std::string song_address;
+    std::string song_address_2;
     std::string vol_input;
     int volume;
 
-    song_address = library.get_song_address(song_db, 1);
-    audio_playback playback(song_address.c_str());
+    //create class that handles user interactions
+    //switch playlists
+    //shuffle on/off
+    //select song to play
+    //add song to queue
+
+    song_address = track_queue.pop_song();
+    song_address_2 = track_queue.pop_song();
+
+    std::cout << song_address << std::endl;
+
+    audio_playback playback(song_address.c_str(), song_address_2.c_str());
 
     //testing menu for features while creating backend
     //planned to be replaced with qt framework for GUI
@@ -43,16 +53,16 @@ int main()
         printf("Pause: p\n");
         printf("Play: s\n");
         printf("Volume: v\n");
+        printf("Add Song: a\n");
         printf("////////////////////\n");
 
         std::cin >> user_input;
 
         switch(user_input)
         {
-            case 'c':
-
+            case 'c': playback.skip_song();
             break;
-
+            
             case 'p': playback.pause_audio();
             break;
 
@@ -67,6 +77,13 @@ int main()
                 playback.set_volume(volume);
 
                 
+
+            break;
+
+            case 'a':
+                printf("Enter song location: ");
+                std::cin >> test_song;
+                library.add_song(test_song.c_str());
 
             break;
 

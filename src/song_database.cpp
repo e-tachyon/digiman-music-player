@@ -1,9 +1,9 @@
 #include "song_database.h"
 
-void song_library::init_database(const char* song_db)
+void song_library::init_database(const char* song_db_link)
 {
     int connection_check;
-    connection_check = sqlite3_open(song_db, &connection);
+    connection_check = sqlite3_open(song_db_link, &connection);
 
     if(connection_check)
     {
@@ -13,7 +13,7 @@ void song_library::init_database(const char* song_db)
     }
 
     char* error_message;
-    const char* create_table = "CREATE TABLE IF NOT EXISTS songs(song_number int PRIMARY KEY, song_name varchar(255), file_address varchar(255));";
+    const char* create_table = "CREATE TABLE IF NOT EXISTS songs(song_number INTEGER PRIMARY KEY AUTOINCREMENT, song_name varchar(255), file_address varchar(255));";
     int create_check;
 
     create_check = sqlite3_exec(connection, create_table, NULL, 0, &error_message);
@@ -25,12 +25,14 @@ void song_library::init_database(const char* song_db)
     }
 
     sqlite3_close(connection);
+    
+    song_db = song_db_link;
 
     return;
 
 }
 
-void song_library::add_song(const char* song_db, const char* song_address)
+void song_library::add_song(const char* song_address)
 {
     int connection_check;
     connection_check = sqlite3_open(song_db, &connection);
@@ -45,7 +47,7 @@ void song_library::add_song(const char* song_db, const char* song_address)
     TagLib::String tag_song_title = f.tag()->title();
     const char* song_title = tag_song_title.toCString(true);
 
-    const char* insert_song = "INSERT INTO songs(song_number, song_name, file_address) VALUES (?, ?, ?);";
+    const char* insert_song = "INSERT INTO songs(song_name, file_address) VALUES (?, ?);";
     sqlite3_stmt* insert_stmt;
     int insert_check;
 
@@ -57,11 +59,8 @@ void song_library::add_song(const char* song_db, const char* song_address)
         return;
     }
 
-    int table_size = 1;
-
-    sqlite3_bind_int(insert_stmt, 1, table_size);
-    sqlite3_bind_text(insert_stmt, 2, song_title, -1, SQLITE_STATIC);
-    sqlite3_bind_text(insert_stmt, 3, song_address, -1, SQLITE_STATIC);
+    sqlite3_bind_text(insert_stmt, 1, song_title, -1, SQLITE_STATIC);
+    sqlite3_bind_text(insert_stmt, 2, song_address, -1, SQLITE_STATIC);
 
     sqlite3_step(insert_stmt);
     sqlite3_finalize(insert_stmt);
@@ -71,7 +70,7 @@ void song_library::add_song(const char* song_db, const char* song_address)
 
 }
 
-std::string song_library::get_song_address(const char* song_db, int song_number)
+std::string song_library::get_song_address(int song_number)
 {
     std::string song_address;
     int connection_check;

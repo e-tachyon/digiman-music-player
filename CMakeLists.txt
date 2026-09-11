@@ -27,9 +27,15 @@ target_compile_features(song_database_lib PUBLIC cxx_std_17)
 target_link_libraries(song_database_lib PRIVATE sqlite3_lib)
 target_link_libraries(song_database_lib PRIVATE tag)
 
+add_library(song_queue_lib STATIC src/song_queue.cpp lib/song_queue.h)
+target_include_directories(song_queue_lib PUBLIC lib)
+target_compile_features(song_queue_lib PUBLIC cxx_std_17)
+target_link_libraries(song_queue_lib PRIVATE song_database_lib)
+
 add_executable(${PROJECT_NAME} app/digiman.cpp)
 
 target_link_libraries(${PROJECT_NAME} PUBLIC audio_backend_lib)
 target_link_libraries(${PROJECT_NAME} PUBLIC song_database_lib)
+target_link_libraries(${PROJECT_NAME} PUBLIC song_queue_lib)
 target_include_directories(${PROJECT_NAME} PRIVATE "third-party/miniaudio")
 
